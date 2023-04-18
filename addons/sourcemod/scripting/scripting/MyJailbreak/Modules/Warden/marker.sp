@@ -163,7 +163,7 @@ public Action Marker_OnPlayerRunCmd(int client, int &buttons, int &impulse, floa
 
 	if (buttons & IN_ATTACK2 || g_bCanMarker[client])
 	{
-		if (!g_bCanZoom[client] && !g_bHasSilencer[client] && (g_iWrongWeapon[client] != 8) && (g_iWrongWeapon[client] != 9) && (IsClientWarden(client) || (IsClientDeputy(client) && gc_bMarkerDeputy.BoolValue)))
+		if (!g_bCanZoom[client] && !g_bHasSilencer[client] && (g_iWrongWeapon[client] != 0) && (g_iWrongWeapon[client] != 8) && (g_iWrongWeapon[client] != 9) && (IsClientWarden(client) || (IsClientDeputy(client) && gc_bMarkerDeputy.BoolValue)))
 		{
 			if (!g_bMarkerSetup[client])
 				GetClientAimTargetPos(client, g_fMarkerSetupStartOrigin);
@@ -227,6 +227,22 @@ void MarkerMenu(int client)
 		return;
 	}
 
+	int marker = IsMarkerInRange(g_fMarkerSetupStartOrigin);
+	if (marker != -1)
+	{
+		RemoveMarker(marker);
+		CPrintToChatAll("%s %t", g_sPrefix, "warden_marker_remove", g_sColorNames[marker]);
+		return;
+	}
+
+	float radius = 2*GetVectorDistance(g_fMarkerSetupEndOrigin, g_fMarkerSetupStartOrigin);
+	if (radius <= 0.0)
+	{
+		RemoveMarker(marker);
+		CPrintToChat(client, "%s %t", g_sPrefix, "warden_wrong");
+		return;
+	}
+
 	float g_fPos[3];
 	GetEntPropVector(client, Prop_Send, "m_vecOrigin", g_fPos);
 
@@ -268,24 +284,26 @@ void MarkerMenu(int client)
 
 public int Handle_MarkerMenu(Menu menu, MenuAction action, int client, int itemNum)
 {
+	if (!IsValidClient(client, false, false))
+		return;
+
+	if (!IsClientWarden(client) && !IsClientDeputy(client))
+	{
+		CPrintToChat(client, "%s %t", g_sPrefix, "warden_notwarden");
+		return;
+	}
+
 	if (action == MenuAction_Select)
 	{
-		if (IsValidClient(client, false, false) && (IsClientWarden(client) || IsClientDeputy(client)))
-		{
-			char info[32];char info2[32];
-			bool found = menu.GetItem(itemNum, info, sizeof(info), _, info2, sizeof(info2));
-			int marker = StringToInt(info);
+		char info[32];char info2[32];
+		bool found = menu.GetItem(itemNum, info, sizeof(info), _, info2, sizeof(info2));
+		int marker = StringToInt(info);
 
-			if (found)
-			{
-				SetupMarker(marker);
-				CPrintToChatAll("%s %t", g_sPrefix, "warden_marker_set", g_sColorNames[marker]);
-			}
+		if (found)
+		{
+			SetupMarker(marker);
+			CPrintToChatAll("%s %t", g_sPrefix, "warden_marker_set", g_sColorNames[marker]);
 		}
-	}
-	else if (action == MenuAction_End)
-	{
-		delete menu;
 	}
 }
 
