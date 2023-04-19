@@ -673,36 +673,37 @@ stock CShowActivity(client, const String:format[], any:...)
 			if ((value & 1) | (value & 2))
 			{
 				new String:newsign[MAX_NAME_LENGTH];
-				newsign = sign;
+				strcopy(newsign, sizeof(newsign), sign);
 				if ((value & 2) || (i == client))
 				{
-					newsign = name;
+					strcopy(newsign, sizeof(newsign), name);
 				}
 				VFormat(szBuffer, sizeof(szBuffer), format, 3);
 				
 				CPrintToChatEx(i, client, "%s%s: %s", tag, newsign, szBuffer);
 			}
 		}
-		else
-		{
-			/* Treat this as an admin user */
-			new bool:is_root = GetAdminFlag(id, Admin_Root, Access_Effective);
-			if ((value & 4)
-				|| (value & 8)
-				|| ((value & 16) && is_root))
-			{
-				new String:newsign[MAX_NAME_LENGTH]
-				newsign = sign;
-				if ((value & 8) || ((value & 16) && is_root) || (i == client))
-				{
-					newsign = name;
-				}
-				VFormat(szBuffer, sizeof(szBuffer), format, 3);
-				
-				CPrintToChatEx(i, client, "%s%s: %s", tag, newsign, szBuffer);
-			}
-		}
-	}
+    else
+    {
+        /* Treat this as an admin user */
+        new bool:is_root = GetAdminFlag(id, Admin_Root, Access_Effective);
+        if ((value & 4)
+            || (value & 8)
+            || ((value & 16) && is_root))
+        {
+            new String:newsign[MAX_NAME_LENGTH];
+            strcopy(newsign, sizeof(newsign), sign);
+            if ((value & 8) || ((value & 16) && is_root) || (i == client))
+            {
+                strcopy(newsign, sizeof(newsign), name);
+            }
+            VFormat(szBuffer, sizeof(szBuffer), format, 3);
+            
+            CPrintToChatEx(i, client, "%s%s: %s", tag, newsign, szBuffer);
+        }
+    }
+}
+
 	
 	return 1;
 }
